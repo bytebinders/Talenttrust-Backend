@@ -30,6 +30,14 @@ npm run dev
 npm start
 ```
 
+## Architecture
+
+The TalentTrust Backend is built as a modular Express API service.
+
+### Core Services
+
+- **Transaction Poller**: Monitors on-chain activity with resilient polling strategies. See [Transaction Polling Specification](docs/backend/polling.md).
+
 ## Scripts
 
 | Script   | Description                    |
@@ -37,7 +45,7 @@ npm start
 | `npm run build` | Compile TypeScript to `dist/`  |
 | `npm run start` | Run production server          |
 | `npm run dev`   | Run with ts-node-dev           |
-| `npm test`      | Run Jest tests                 |
+| `npm test`      | Run Jest tests (with coverage) |
 | `npm run lint`  | Run ESLint                     |
 
 ## Contributing
