@@ -40,6 +40,15 @@ npm start
 | `npm test`      | Run Jest tests                 |
 | `npm run lint`  | Run ESLint                     |
 
+## API Endpoints
+
+- `GET /health` - Health check
+- `GET /api/v1/contracts` - Get contracts
+- `GET /api/v1/reputation/:id` - Get freelancer reputation profile
+- `PUT /api/v1/reputation/:id` - Update freelancer reputation profile
+
+See [docs/backend/reputation-api.md](docs/backend/reputation-api.md) for detailed Reputation API info.
+
 ## Contributing
 
 1. Fork the repo and create a branch from `main`.

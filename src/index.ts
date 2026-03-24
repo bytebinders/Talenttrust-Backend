@@ -9,10 +9,18 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'talenttrust-backend' });
 });
 
-app.get('/api/v1/contracts', (_req: Request, res: Response) => {
+import reputationRoutes from './routes/reputation.routes';
+
+app.use('/api/v1/contracts', (_req: Request, res: Response) => {
   res.json({ contracts: [] });
 });
 
-app.listen(PORT, () => {
-  console.log(`TalentTrust API listening on http://localhost:${PORT}`);
-});
+app.use('/api/v1/reputation', reputationRoutes);
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`TalentTrust API listening on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
