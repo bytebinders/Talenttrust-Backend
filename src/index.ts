@@ -1,18 +1,26 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-app.get('/health', (_req: Request, res: Response) => {
+// Health check route
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'talenttrust-backend' });
 });
 
-app.get('/api/v1/contracts', (_req: Request, res: Response) => {
-  res.json({ contracts: [] });
-});
+// Register handlers - Order is important
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`TalentTrust API listening on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3001;
+
+/* istanbul ignore next */
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`TalentTrust API listening on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
