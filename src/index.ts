@@ -214,8 +214,10 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 // ── Start server ─────────────────────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`TalentTrust API listening on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`TalentTrust API listening on http://localhost:${PORT}`);
+  });
+}
 
 export { app };

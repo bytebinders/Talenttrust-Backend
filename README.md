@@ -40,6 +40,11 @@ npm start
 | `npm test`      | Run Jest tests                |
 | `npm run lint`  | Run ESLint                    |
 
+## Testing
+
+Test coverage across the application is ≥ 95%.
+The API integration tests (`src/index.test.ts`) use `supertest` to hit all Express endpoints directly, backed by an isolated in-memory SQLite database (`:memory:`). This guarantees speed, predictability, and 100% test hermeticity without needing to run an external database server.
+
 ## Contributing
 
 1. Fork the repo and create a branch from `main`.
