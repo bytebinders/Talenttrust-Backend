@@ -61,6 +61,14 @@ All handled errors return:
 
 Detailed notes are in `docs/backend/error-handling.md`.
 
+## Features
+
+- **Smart Contract Integration**: Handles contract metadata and lifecycle management
+- **Reputation System**: Tracks and manages freelancer reputation
+- **Data Retention Controls**: Configurable compliance-ready data retention and archival
+- **Audit Logging**: Complete audit trail for compliance verification
+- **GDPR/CCPA Ready**: Built-in support for major compliance frameworks
+
 ## Prerequisites
 
 - Node.js 18+
