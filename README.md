@@ -147,6 +147,22 @@ The backend uses an embedded **SQLite** database (via `better-sqlite3`) — no e
 
 Schema migrations run automatically on startup. See [`docs/backend/database.md`](docs/backend/database.md) for full documentation: schema, repository API, configuration, and security notes.
 
+## Circuit Breaker
+
+Upstream RPC calls (Stellar/Soroban) are protected by a built-in circuit breaker.
+
+| State       | Behaviour                                          |
+| ----------- | -------------------------------------------------- |
+| `CLOSED`    | Normal operation                                   |
+| `OPEN`      | Fast-fail — returns `503` without calling upstream |
+| `HALF_OPEN` | Single probe; success → CLOSED, failure → OPEN     |
+
+| Environment variable | Default                               | Description               |
+| -------------------- | ------------------------------------- | ------------------------- |
+| `STELLAR_RPC_URL`    | `https://soroban-testnet.stellar.org` | Stellar JSON-RPC endpoint |
+
+Live state is available at `GET /api/v1/circuit-breaker/status`. See [`docs/backend/circuit-breaker.md`](docs/backend/circuit-breaker.md) for full reference.
+
 ## License
 
 MIT
