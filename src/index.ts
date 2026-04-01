@@ -1,45 +1,107 @@
 /**
  * @module index
- * @description TalentTrust Backend – application entry point.
+ * @description Server entry point.
  *
- * Wires together Express, structured-logging middleware, and route handlers.
- * The Express `app` is exported so integration tests can import it without
- * starting a real TCP listener.
+ * Bootstraps the Express application and binds it to a port.
+ * Import `createApp` from `./app` in tests — never import this file directly
+ * in test suites, as it starts the HTTP server immediately.
  */
 
-import express, { Request, Response } from 'express';
-import { requestIdMiddleware } from './middleware/requestId';
-import { httpLoggerMiddleware } from './middleware/httpLogger';
-import { logger } from './logger';
+import { createApp } from './app';
 
-export const app = express();
-const PORT = process.env['PORT'] ?? 3001;
+const PORT = process.env.PORT || 3001;
+const app = createApp();
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+/**
+ * Enqueue a background job
+ * POST /api/v1/jobs
+ * Body: { type: JobType, payload: JobPayload, options?: { priority, delay } }
+ */
+app.post('/api/v1/jobs', async (req: Request, res: Response) => {
+  try {
+    const { type, payload, options } = req.body;
 
-app.use(express.json());
+    if (!type || !payload) {
+      return res.status(400).json({ error: 'Job type and payload are required' });
+    }
 
-// 1. Attach requestId / correlationId to every request first.
-app.use(requestIdMiddleware);
+    if (!Object.values(JobType).includes(type)) {
+      return res.status(400).json({ error: `Invalid job type: ${type}` });
+    }
 
-// 2. Emit structured access-log records (needs res.locals.log from step 1).
-app.use(httpLoggerMiddleware);
-
-// ── Routes ────────────────────────────────────────────────────────────────────
-
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'talenttrust-backend' });
+    const jobId = await queueManager.addJob(type, payload, options);
+    res.status(201).json({ jobId, type, status: 'queued' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ error: `Failed to enqueue job: ${message}` });
+  }
 });
 
-app.get('/api/v1/contracts', (_req: Request, res: Response) => {
-  res.json({ contracts: [] });
+/**
+ * Get job status
+ * GET /api/v1/jobs/:type/:jobId
+ */
+app.get('/api/v1/jobs/:type/:jobId', async (req: Request, res: Response) => {
+  try {
+    const { type, jobId } = req.params;
+
+    if (!Object.values(JobType).includes(type as JobType)) {
+      return res.status(400).json({ error: `Invalid job type: ${type}` });
+    }
+
+    const status = await queueManager.getJobStatus(type as JobType, jobId);
+    
+    if (!status) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    res.json(status);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ error: `Failed to get job status: ${message}` });
+  }
 });
 
-// ── Server bootstrap ──────────────────────────────────────────────────────────
-
-/* istanbul ignore next */
-if (require.main === module) {
-  app.listen(PORT, () => {
-    logger.info('server started', { port: PORT });
-  });
+/**
+ * Initialize queues on startup
+ */
+async function initializeQueues() {
+  console.log('Initializing background job queues...');
+  
+  for (const jobType of Object.values(JobType)) {
+    await queueManager.initializeQueue(jobType);
+    console.log(`Queue initialized: ${jobType}`);
+  }
+  
+  console.log('All queues initialized successfully');
 }
+
+/**
+ * Graceful shutdown handler
+ */
+async function gracefulShutdown() {
+  console.log('Received shutdown signal, closing gracefully...');
+  await queueManager.shutdown();
+  process.exit(0);
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+/**
+ * Start the server
+ */
+async function startServer() {
+  try {
+    await initializeQueues();
+    
+    app.listen(PORT, () => {
+      console.log(`TalentTrust API listening on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
